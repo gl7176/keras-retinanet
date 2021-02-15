@@ -103,6 +103,7 @@ class TrainingPlot(keras.callbacks.Callback):
                 writer.writerow(["mAP:"])
                 writer.writerow(self.mAP)
             
+makedirs("output")
 plot_losses = TrainingPlot()
             
 def makedirs(path):
