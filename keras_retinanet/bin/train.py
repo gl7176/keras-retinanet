@@ -93,10 +93,10 @@ class TrainingPlot(keras.callbacks.Callback):
             plt.legend()
             # Make sure there exists a folder called output in the current directory
             # or replace 'output' with whatever direcory you want to put in the plots
-            plt.savefig('output/Epoch-{}.png'.format(epoch))
+            plt.savefig('output/Epoch-{}.png'.format(str(int(epoch)+1)))
             plt.close()
             
-            with open('output/Epoch-{}.csv'.format(epoch), 'w', newline='') as fp:
+            with open('output/Epoch-{}.csv'.format(str(int(epoch)+1)), 'w', newline='') as fp:
                 writer = csv.writer(fp)
                 writer.writerow(["losses:"])
                 writer.writerow(self.losses)
