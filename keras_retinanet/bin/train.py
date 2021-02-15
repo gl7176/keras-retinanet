@@ -103,7 +103,6 @@ class TrainingPlot(keras.callbacks.Callback):
                 writer.writerow(["mAP:"])
                 writer.writerow(self.mAP)
             
-makedirs("output")
 plot_losses = TrainingPlot()
             
 def makedirs(path):
@@ -116,6 +115,7 @@ def makedirs(path):
         if not os.path.isdir(path):
             raise
 
+makedirs("output")
 
 def model_with_weights(model, weights, skip_mismatch):
     """ Load weights for model.
