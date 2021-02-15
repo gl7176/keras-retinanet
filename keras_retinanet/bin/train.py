@@ -20,6 +20,13 @@ import argparse
 import os
 import sys
 import warnings
+import matplotlib.pyplot as plt
+import csv
+
+import numpy as np
+
+import matplotlib
+matplotlib.use('agg')
 
 from tensorflow import keras
 import tensorflow as tf
@@ -50,6 +57,54 @@ from ..utils.tf_version import check_tf_version
 from ..utils.transform import random_transform_generator
 
 
+class TrainingPlot(keras.callbacks.Callback):
+
+    # This function is called when the training begins
+    def on_train_begin(self, logs={}):
+        # Initialize the lists for holding the logs, losses and accuracies
+        self.losses = []
+        self.mAP = []
+        self.logs = []
+
+    # This function is called at the end of each epoch
+    def on_epoch_end(self, epoch, logs={}):
+
+        # Append the logs, losses and accuracies to the lists
+        self.logs.append(logs)
+        self.losses.append(logs.get('loss'))
+        self.mAP.append(logs.get('mAP'))
+
+        # Before plotting ensure at least 2 epochs have passed
+        if len(self.losses) > 1:
+
+            N = np.arange(0, len(self.losses))
+
+            # You can chose the style of your preference
+            # print(plt.style.available) to see the available options
+            #plt.style.use("seaborn")
+
+            # Plot train loss, train acc, val loss and val acc against epochs passed
+            plt.figure()
+            plt.plot(N, self.losses, label = "train_loss")
+            plt.plot(N, self.mAP, label = "train_mAP")
+            plt.title("Training Loss and Accuracy [Epoch {}]".format(epoch))
+            plt.xlabel("Epoch #")
+            plt.ylabel("Loss/Accuracy")
+            plt.legend()
+            # Make sure there exists a folder called output in the current directory
+            # or replace 'output' with whatever direcory you want to put in the plots
+            plt.savefig('output/Epoch-{}.png'.format(epoch))
+            plt.close()
+            
+            with open('output/Epoch-{}.csv'.format(epoch), 'w', newline='') as fp:
+                writer = csv.writer(fp)
+                writer.writerow(["losses:"])
+                writer.writerow(self.losses)
+                writer.writerow(["mAP:"])
+                writer.writerow(self.mAP)
+            
+plot_losses = TrainingPlot()
+            
 def makedirs(path):
     # Intended behavior: try to create the directory,
     # pass if the directory exists already, fails otherwise.
@@ -207,14 +262,14 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
     if args.evaluation and validation_generator:
         callbacks.append(keras.callbacks.EarlyStopping(
             monitor    = 'mAP',
-            patience   = 5,
+            patience   = 10,
             mode       = 'max',
             min_delta  = 0.01
         ))
 
     if args.tensorboard_dir:
         callbacks.append(tensorboard_callback)
-
+    callbacks.append(plot_losses)
     return callbacks
 
 
@@ -535,7 +590,7 @@ def main(args=None):
         validation_generator = None
 
     # start training
-    return training_model.fit_generator(
+    history = training_model.fit_generator(
         generator=train_generator,
         steps_per_epoch=args.steps,
         epochs=args.epochs,
@@ -547,7 +602,7 @@ def main(args=None):
         validation_data=validation_generator,
         initial_epoch=args.initial_epoch
     )
-
+    return history
 
 if __name__ == '__main__':
     main()
