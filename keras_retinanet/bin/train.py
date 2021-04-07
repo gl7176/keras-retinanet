@@ -593,7 +593,7 @@ def main(args=None):
     # start training
     history = training_model.fit_generator(
         generator=train_generator,
-        steps_per_epoch=train_generator.samples//train_generator.batch_size,
+        steps_per_epoch=args.steps,
         epochs=args.epochs,
         verbose=1,
         callbacks=callbacks,
